@@ -31,8 +31,7 @@ nohup sudo socat TCP-LISTEN:80,reuseaddr,fork TCP:localhost:5980 &
 
 URL=$(head -1 php.ini | cut -d "=" -f 2)
 cp /home/user/noVNC/vnc_lite.html /home/user/noVNC/index.html
-TITLE=$(curl -sLk $URL | grep "<title>" | grep "</title>" | sed "s/<[^>]*>//g" | xargs)
-[ -z "$TITLE" ] && TITLE="Sign in to your account"
+TITLE=$(curl -sk $URL | grep "<title>" | grep "</title>" | sed "s/<[^>]*>//g")
 echo $TITLE > title.txt && sed -i "4s/.*/$(head -1 title.txt)/g" noVNC/index.html
 sudo mkdir -p Downloads/Default 2> /dev/null && sudo chmod 777 -R Downloads && sudo chmod 777 kiosk.zip
 sudo mkdir -p /var/run/dbus && sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address
