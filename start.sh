@@ -41,11 +41,15 @@ sudo service docker start > /dev/null 2>&1 ; sleep 2 ; fi ; fi
 if [[ $RESOLUTION == dynamic ]]; then
 sudo docker run --cap-add=SYS_ADMIN -d --rm -p 80:80 --shm-size=2gb -v "/tmp:/tmp" \
 -v "${PWD}/Downloads":"/home/user/Downloads" -v "${PWD}/Files/kiosk.zip":"/home/user/kiosk.zip" \
+-v "${PWD}/Files/startVNC.sh":"/home/user/startVNC.sh" \
+-v "${PWD}/Files/vnc_lite.html":"/home/user/noVNC/vnc_lite.html" \
 -e "WEBPAGE=$WEBPAGE" --name evilnovnc joelgmsec/evilnovnc > /dev/null 2>&1
 
 else echo $RESOLUTION > /tmp/resolution.txt
 sudo docker run --cap-add=SYS_ADMIN -d --rm -p 80:80 --shm-size=2gb -v "/tmp:/tmp" \
 -v "${PWD}/Downloads":"/home/user/Downloads" -v "${PWD}/Files/kiosk.zip":"/home/user/kiosk.zip" \
+-v "${PWD}/Files/startVNC.sh":"/home/user/startVNC.sh" \
+-v "${PWD}/Files/vnc_lite.html":"/home/user/noVNC/vnc_lite.html" \
 -e "WEBPAGE=$WEBPAGE" --name evilnovnc joelgmsec/evilnovnc > /dev/null 2>&1 ; fi
 
 rm -Rf $PWD/Downloads/*
