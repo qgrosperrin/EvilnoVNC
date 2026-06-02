@@ -15,16 +15,12 @@ if (isset($_POST['jsonified'])) {
     <title></title>
     <style>
         @-webkit-keyframes loading {
-            0%   { -webkit-transform: rotate(0deg);   transform: rotate(0deg); }
-            25%  { -webkit-transform: rotate(90deg);  transform: rotate(90deg); }
-            50%  { -webkit-transform: rotate(180deg); transform: rotate(180deg); }
-            75%  { -webkit-transform: rotate(270deg); transform: rotate(270deg); }
+            from { -webkit-transform: rotate(0deg);   transform: rotate(0deg);   }
+            to   { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
         }
         @keyframes loading {
-            0%   { -webkit-transform: rotate(0deg);   transform: rotate(0deg); }
-            25%  { -webkit-transform: rotate(90deg);  transform: rotate(90deg); }
-            50%  { -webkit-transform: rotate(180deg); transform: rotate(180deg); }
-            75%  { -webkit-transform: rotate(270deg); transform: rotate(270deg); }
+            from { -webkit-transform: rotate(0deg);   transform: rotate(0deg);   }
+            to   { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
         }
         html, body { margin: 0; padding: 0; height: 100%; background-color: white; }
         .loading-in-progress {
@@ -41,8 +37,8 @@ if (isset($_POST['jsonified'])) {
             background-position: center center;
             background-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjRweCIgaGVpZ2h0PSIyNHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8IS0tIEdlbmVyYXRvcjogU2tldGNoIDQ1LjIgKDQzNTE0KSAtIGh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaCAtLT4KICAgIDx0aXRsZT5zcGlubmVyPC90aXRsZT4KICAgIDxkZXNjPkNyZWF0ZWQgd2l0aCBTa2V0Y2guPC9kZXNjPgogICAgPGRlZnM+PC9kZWZzPgogICAgPGcgaWQ9IldvcmtpbmciIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxnIGlkPSJzcGlubmVyIiBmaWxsLXJ1bGU9Im5vbnplcm8iPgoJCQk8cGF0aCBkPSJNMTMgMHYyYzQuNzIzLjQ2OSA4LjUzMSA0LjI3NyA5IDloMkMyMy41MTggNS4xNzIgMTguODI3LjQ4MiAxMyAwIiBmaWxsPSIjMDA0NURCIj48L3BhdGg+CgkJCTxwYXRoIGQ9Ik0xMSAwQzUuMTczLjQ4Mi40ODIgNS4xNzIgMCAxMWgyYy40NjktNC43MjMgNC4yNzctOC41MzEgOS05VjB6IiBmaWxsPSIjRTFGNEZGIj48L3BhdGg+CgkJCTxwYXRoIGQ9Ik0xMSAyMmMtNC43MjMtLjQ3LTguNTMxLTQuMjc2LTktOUgwYy40ODIgNS44MjggNS4xNzMgMTAuNTE4IDExIDExdi0yeiIgZmlsbD0iI0UxRjRGRiI+PC9wYXRoPgoJCQk8cGF0aCBkPSJNMjIgMTNjLS40NjkgNC43MjQtNC4yNzcgOC41My05IDl2MmM1LjgyNy0uNDgyIDEwLjUxOC01LjE3MiAxMS0xMWgtMnoiIGZpbGw9IiNFMUY0RkYiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=");
             background-repeat: no-repeat;
-            -webkit-animation: loading 0.7s infinite steps(1);
-                    animation: loading 0.7s infinite steps(1);
+            -webkit-animation: loading 0.7s steps(4) infinite;
+                    animation: loading 0.7s steps(4) infinite;
             background-size: 24px;
             height: 24px;
             width: 24px;
@@ -81,12 +77,8 @@ if (isset($_POST['jsonified'])) {
         data.append('jsonified', JSON.stringify(info));
         var xhr = new XMLHttpRequest();
         xhr.open('POST', window.location.href, true);
-        xhr.onloadend = function(){
-            // Reload as soon as the POST returns. If noVNC isn't up yet,
-            // we'll land back on this page and try again in 1s.
-            setTimeout(function(){ window.location.reload(); }, 1000);
-        };
         xhr.send(data);
+        setTimeout(function(){ window.location.reload(); }, 5000);
     })();
     </script>
 </body>
