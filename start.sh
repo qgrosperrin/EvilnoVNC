@@ -54,6 +54,40 @@ printf "\n\e[1;33m[>] EvilnoVNC Server is running.." ; sleep 2
 printf "\n\e[1;34m[+] URL: http://localhost" ; sleep 2
 printf "\n\e[1;31m[!] Press Ctrl+C at any time to close!" ; sleep 2
 
+diagnose() {
+    local label=$1
+    printf "\n\e[1;36m[?] Diagnostic (%s):\e[1;0m\n" "$label"
+
+    local listen
+    listen=$(sudo docker exec evilnovnc ss -ltn 2>&1)
+    if grep -qE '(^| )(0\.0\.0\.0|\[::\]|\*):80 ' <<<"$listen"; then
+        printf "\e[1;32m  [OK]   container :80 is bound\e[1;0m\n"
+    else
+        printf "\e[1;31m  [ERR]  nothing bound on container :80\e[1;0m\n"
+        printf "\e[0;90m         ss -ltn output:\n%s\e[1;0m\n" "$listen"
+    fi
+
+    local php
+    php=$(sudo docker exec evilnovnc pgrep -a php 2>&1)
+    if [[ -n "$php" && "$php" != *"no process"* ]]; then
+        printf "\e[1;32m  [OK]   php running: %s\e[1;0m\n" "$php"
+    else
+        printf "\e[1;31m  [ERR]  no php process inside container\e[1;0m\n"
+    fi
+
+    local logs
+    logs=$(sudo docker logs --tail 20 evilnovnc 2>&1)
+    if [[ -n "$logs" ]]; then
+        printf "\e[1;33m  [INFO] last 20 lines of docker logs:\e[1;0m\n%s\n" "$logs"
+    else
+        printf "\e[1;33m  [INFO] docker logs empty\e[1;0m\n"
+    fi
+}
+
+diagnose "initial"
+sleep 5
+diagnose "after 5s"
+
 if [[ $RESOLUTION == dynamic ]]; then
 printf "\n\e[1;32m[+] Waiting for any user interaction.." ; sleep 2
 while [[ -z "$(cat /tmp/resolution.txt 2> /dev/null)" ]]; do sleep 1 ; done
