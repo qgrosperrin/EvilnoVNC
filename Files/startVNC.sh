@@ -19,13 +19,13 @@ echo 'starting with' $RESOLUTION
 sudo pkill -9 php
 
 nohup sudo rm -f "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
-nohup sudo /usr/bin/Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +extension RANDR +render -noreset &
+nohup sudo /usr/bin/Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +render -noreset &
 while [[ ! $(xdpyinfo -display $DISPLAY 2> /dev/null) ]]; do sleep 1; done 
 nohup sudo chmod a-rwx /usr/bin/xfdesktop && sudo chmod a-rwx /usr/bin/xfce4-terminal
 nohup sudo chmod a-rwx /usr/bin/xfce4-panel && sudo chmod a-rwx /usr/bin/thunar
 nohup sudo startxfce4 > /dev/null || true &
 
-nohup sudo x11vnc -xkb -noxrecord -noxfixes -noxdamage -xrandr -many -shared -display $DISPLAY -rfbauth /home/user/.vnc/passwd -rfbport 5900 "$@" &
+nohup sudo x11vnc -xkb -noxrecord -noxfixes -noxdamage -many -shared -display $DISPLAY -rfbauth /home/user/.vnc/passwd -rfbport 5900 "$@" &
 nohup sudo /home/user/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 5980 &
 nohup sudo socat TCP-LISTEN:80,reuseaddr,fork TCP:localhost:5980 &
 

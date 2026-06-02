@@ -72,8 +72,7 @@ Sign in to your account
         rfb.addEventListener("credentialsrequired", credentialsAreRequired);
         rfb.addEventListener("desktopname", updateDesktopName);
         rfb.viewOnly = readQueryVariable('view_only', false);
-        rfb.scaleViewport = true;
-        rfb.resizeSession = true;
+        rfb.scaleViewport = readQueryVariable('scale', false);
 
     </script>
 </head>
