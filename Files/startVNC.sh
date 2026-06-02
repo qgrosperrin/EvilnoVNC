@@ -5,18 +5,11 @@
 #=============================#
 
 DISPLAY=:1
-sudo rm -f /tmp/resolution.txt
-sudo rm -f /tmp/client_info.txt
 sudo rm -f /tmp/.X${DISPLAY#:}-lock
 
-echo "URL=$WEBPAGE" > php.ini
-sudo /bin/bash -c "php -q -S 0.0.0.0:80 &" > /dev/null 2>&1
-
-while [ ! $(cat /tmp/client_info.txt 2> /dev/null | grep "x24") ]; do sleep 1 ; done
-cat /tmp/client_info.txt | jq .RESOLUTION | tr -d "\"" > /tmp/resolution.txt ; sleep 1
-export RESOLUTION=$(cat /tmp/resolution.txt)
+export RESOLUTION=$(cat /tmp/resolution.txt 2> /dev/null)
+RESOLUTION=${RESOLUTION:-1920x1080x24}
 echo 'starting with' $RESOLUTION
-sudo pkill -9 php
 
 nohup sudo rm -f "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
 nohup sudo /usr/bin/Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +render -noreset &
@@ -29,12 +22,13 @@ nohup sudo x11vnc -xkb -noxrecord -noxfixes -noxdamage -many -shared -display $D
 nohup sudo /home/user/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 5980 &
 nohup sudo socat TCP-LISTEN:80,reuseaddr,fork TCP:localhost:5980 &
 
-URL=$(head -1 php.ini | cut -d "=" -f 2)
+URL=$WEBPAGE
+USERAGENT=${USERAGENT:-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+CLIENT_LANG=${CLIENT_LANG:-en-US}
 cp /home/user/noVNC/vnc_lite.html /home/user/noVNC/index.html
 sudo mkdir -p Downloads/Default 2> /dev/null && sudo chmod 777 -R Downloads && sudo chmod 777 kiosk.zip
 sudo mkdir -p /var/run/dbus && sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address
-while read -rd $'' line; do export "$line" ; done < <(jq -r <<<"$values" 'to_entries|map("\(.key)=\"\(.value)\"\u0000")[]' /tmp/client_info.txt)
-unzip -n kiosk.zip && sleep 3 && chrome-linux/chrome --no-sandbox --load-extension=/home/user/kiosk/ --kiosk $URL --fast ---fast-start --user-agent="${USERAGENT//\"}" --accept-lang=${CLIENT_LANG//\"} &
+unzip -n kiosk.zip && sleep 3 && chrome-linux/chrome --no-sandbox --load-extension=/home/user/kiosk/ --kiosk $URL --fast ---fast-start --user-agent="$USERAGENT" --accept-lang=$CLIENT_LANG &
 
 nohup /bin/bash -c "touch /home/user/Downloads/Cookies.txt ; mkdir /home/user/Downloads/Default" &
 nohup /bin/bash -c "touch /home/user/Downloads/Keylogger.txt" &
