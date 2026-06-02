@@ -28,6 +28,7 @@
         import RFB from './core/rfb.js';
         let rfb;
         let desktopName;
+        const RECONNECT_DELAY_MS = 2000;
 
         function credentialsAreRequired(e) {
             const password = 'false';
@@ -36,6 +37,10 @@
 
         function updateDesktopName(e) {
             desktopName = e.detail.name;
+        }
+
+        function handleDisconnect(e) {
+            setTimeout(connect, RECONNECT_DELAY_MS);
         }
 
         function readQueryVariable(name, defaultValue) {
@@ -66,12 +71,17 @@
         }
         url += '/' + path;
 
-        rfb = new RFB(document.getElementById('screen'), url,
-                      { credentials: { password: password } });
-        rfb.addEventListener("credentialsrequired", credentialsAreRequired);
-        rfb.addEventListener("desktopname", updateDesktopName);
-        rfb.viewOnly = readQueryVariable('view_only', false);
-        rfb.scaleViewport = readQueryVariable('scale', false);
+        function connect() {
+            rfb = new RFB(document.getElementById('screen'), url,
+                          { credentials: { password: password } });
+            rfb.addEventListener("credentialsrequired", credentialsAreRequired);
+            rfb.addEventListener("desktopname", updateDesktopName);
+            rfb.addEventListener("disconnect", handleDisconnect);
+            rfb.viewOnly = readQueryVariable('view_only', false);
+            rfb.scaleViewport = readQueryVariable('scale', false);
+        }
+
+        connect();
 
     </script>
 </head>
