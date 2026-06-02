@@ -58,21 +58,39 @@ diagnose() {
     local label=$1
     printf "\n\e[1;36m[?] Diagnostic (%s):\e[1;0m\n" "$label"
 
-    local listen
-    listen=$(sudo docker exec evilnovnc ss -ltn 2>&1)
-    if grep -qE '(^| )(0\.0\.0\.0|\[::\]|\*):80 ' <<<"$listen"; then
-        printf "\e[1;32m  [OK]   container :80 is bound\e[1;0m\n"
+    if [[ -z "$(sudo docker ps -q -f name=^evilnovnc$)" ]]; then
+        printf "\e[1;31m  [ERR]  container 'evilnovnc' is not running\e[1;0m\n"
+        local logs
+        logs=$(sudo docker logs --tail 20 evilnovnc 2>&1)
+        if [[ -n "$logs" && "$logs" != *"No such container"* ]]; then
+            printf "\e[1;33m  [INFO] last 20 lines (exited container logs):\e[1;0m\n%s\n" "$logs"
+        fi
+        return
+    fi
+
+    local http
+    http=$(sudo docker exec evilnovnc curl -sS -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:80/ 2>&1)
+    if [[ "$http" =~ ^[0-9]{3}$ ]]; then
+        printf "\e[1;32m  [OK]   container :80 responds (HTTP %s)\e[1;0m\n" "$http"
     else
-        printf "\e[1;31m  [ERR]  nothing bound on container :80\e[1;0m\n"
-        printf "\e[0;90m         ss -ltn output:\n%s\e[1;0m\n" "$listen"
+        printf "\e[1;31m  [ERR]  container :80 not responding\e[1;0m\n"
+        printf "\e[0;90m         curl output: %s\e[1;0m\n" "$http"
     fi
 
     local php
-    php=$(sudo docker exec evilnovnc pgrep -a php 2>&1)
-    if [[ -n "$php" && "$php" != *"no process"* ]]; then
+    php=$(sudo docker exec evilnovnc pgrep -a php 2>/dev/null)
+    if [[ -n "$php" ]]; then
         printf "\e[1;32m  [OK]   php running: %s\e[1;0m\n" "$php"
     else
-        printf "\e[1;31m  [ERR]  no php process inside container\e[1;0m\n"
+        printf "\e[1;33m  [INFO] no php process (expected post-handover, ERR only during dynamic bootstrap)\e[1;0m\n"
+    fi
+
+    local socat
+    socat=$(sudo docker exec evilnovnc pgrep -a socat 2>/dev/null)
+    if [[ -n "$socat" ]]; then
+        printf "\e[1;32m  [OK]   socat running: %s\e[1;0m\n" "$socat"
+    else
+        printf "\e[1;33m  [INFO] no socat process (expected during dynamic bootstrap, ERR after handover)\e[1;0m\n"
     fi
 
     local logs
